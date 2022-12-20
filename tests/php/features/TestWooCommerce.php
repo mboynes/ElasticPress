@@ -354,7 +354,7 @@ class TestWooCommerce extends BaseTestCase {
 	 */
 	public function testSearchQueryForCoupon() {
 
-		// tests that the search query doesn't use Elasticsearch.
+		// ensures that the search query doesn't use Elasticsearch.
 		$query = new \WP_Query(
 			[
 				'post_type' => 'shop_coupon',
@@ -363,7 +363,7 @@ class TestWooCommerce extends BaseTestCase {
 		);
 		$this->assertNull( $query->elasticsearch_success );
 
-		// tests that the search query doesn't use Elasticsearch when ep_integrate set to false.
+		// ensures that the search query doesn't use Elasticsearch when ep_integrate set to false.
 		$query = new \WP_Query(
 			[
 				'post_type'    => 'shop_coupon',
@@ -373,7 +373,7 @@ class TestWooCommerce extends BaseTestCase {
 		);
 		$this->assertNull( $query->elasticsearch_success );
 
-		// tests that the search query use Elasticsearch when ep_integrate set to true.
+		// ensures that the search query use Elasticsearch when ep_integrate set to true.
 		$query = new \WP_Query(
 			[
 				'post_type'    => 'shop_coupon',
