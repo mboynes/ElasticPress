@@ -136,28 +136,6 @@ class WooCommerce extends Feature {
 	}
 
 	/**
-	 * Make sure all loop shop post ins are IDS. We have to pass post objects here since we override
-	 * the fields=>id query for the layered filter nav query
-	 *
-	 * @param   array $posts Post object array.
-	 * @since   2.1
-	 * @return  array
-	 */
-	public function convert_post_object_to_id( $posts ) {
-		$new_posts = [];
-
-		foreach ( $posts as $post ) {
-			if ( is_object( $post ) ) {
-				$new_posts[] = $post->ID;
-			} else {
-				$new_posts[] = $post;
-			}
-		}
-
-		return $new_posts;
-	}
-
-	/**
 	 * Index Woocommerce taxonomies
 	 *
 	 * @param   array $taxonomies Index taxonomies array.
@@ -197,39 +175,6 @@ class WooCommerce extends Feature {
 		}
 
 		return array_merge( $taxonomies, $woo_taxonomies );
-	}
-
-	/**
-	 * Disallow duplicated ES queries on Orders page.
-	 *
-	 * @since 2.4
-	 *
-	 * @param array    $value Original filter values.
-	 * @param WP_Query $query WP_Query
-	 *
-	 * @return array
-	 */
-	public function disallow_duplicated_query( $value, $query ) {
-		global $pagenow;
-
-		$searchable_post_types = $this->get_admin_searchable_post_types();
-
-		/**
-		 * Make sure we're on edit.php in admin dashboard.
-		 */
-		if ( 'edit.php' !== $pagenow || ! is_admin() || ! in_array( $query->get( 'post_type' ), $searchable_post_types, true ) ) {
-			return $value;
-		}
-
-		/**
-		 * Check if EP API request was already done. If request was sent return its results.
-		 */
-		if ( isset( $query->elasticsearch_success ) && $query->elasticsearch_success ) {
-			return $query->posts;
-		}
-
-		return $value;
-
 	}
 
 	/**
@@ -862,13 +807,10 @@ class WooCommerce extends Feature {
 		add_filter( 'ep_sync_insert_permissions_bypass', [ $this, 'bypass_order_permissions_check' ], 10, 2 );
 		add_filter( 'ep_elasticpress_enabled', [ $this, 'blacklist_coupons' ], 10, 2 );
 		add_filter( 'ep_prepare_meta_allowed_protected_keys', [ $this, 'whitelist_meta_keys' ], 10, 2 );
-		add_filter( 'woocommerce_layered_nav_query_post_ids', [ $this, 'convert_post_object_to_id' ], 10, 4 );
-		add_filter( 'woocommerce_unfiltered_product_ids', [ $this, 'convert_post_object_to_id' ], 10, 4 );
 		add_filter( 'ep_sync_taxonomies', [ $this, 'whitelist_taxonomies' ], 10, 2 );
 		add_filter( 'ep_post_sync_args_post_prepare_meta', [ $this, 'add_order_items_search' ], 20, 2 );
 		add_filter( 'ep_pc_skip_post_content_cleanup', [ $this, 'keep_order_fields' ], 20, 2 );
 		add_action( 'pre_get_posts', [ $this, 'translate_args' ], 11, 1 );
-		add_action( 'ep_wp_query_search_cached_posts', [ $this, 'disallow_duplicated_query' ], 10, 2 );
 		add_action( 'parse_query', [ $this, 'maybe_hook_woocommerce_search_fields' ], 1 );
 		add_action( 'parse_query', [ $this, 'search_order' ], 11 );
 		add_filter( 'ep_term_suggest_post_type', [ $this, 'suggest_wc_add_post_type' ] );
